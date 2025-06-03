@@ -13,16 +13,16 @@
 #include <unistd.h>
 #include <stdarg.h>
 
-void	ft_putstr_fd(char *s, int fd);
-static	size_t	get_lenth(long n);
-static	char	*convert(char *str, long n, size_t i, size_t sign);
+static	int	putstr(char *s);
+static	int	putchar(int i);
+static	int	print_pointer(void *p);
 
 int	ft_printf(const char *s, ...)
 {
 	va_list	args;
 	int		i = 0;
 	char	*str;
-	unsigned int	j;
+	void	*p;
 
 
 	va_start(args, s);
@@ -35,17 +35,17 @@ int	ft_printf(const char *s, ...)
 			if (*s == 'c')
 			{
 				i = va_arg(args, int);
-				write(1, &i, 1);
+				putchar(i);
 			}
 			if (*s == 's')
 			{
 				str = va_arg(args, char*);
-				ft_putstr_fd(str, 1);
+				putstr(str);
 			}
 			if (*s == 'p')
 			{
-				j = va_arg(args, unsigned int);
-				get_lenth(j);
+				p = va_arg(args, void *);
+				print_pointer(p);
 
 			}
 		}
@@ -64,47 +64,65 @@ int	ft_printf(const char *s, ...)
 int	main()
 {
 //	char *str = "abcdef";
+	int i = 125;
 
-	//ft_printf("www %s mmm", str);
-	printf("%x\n", 123);
+	printf("%d\n",ft_printf("www %p mmm\n", i));
+//	ft_printf("www %p mmm\n", i);
+//	printf("%x\n", 123);
 }
 
-
-void	ft_putstr_fd(char *s, int fd)
+static	int	putchar(int i)
 {
+	char	c;
+
+	c = (char)i;
+	if (write(1, &c, 1) != 1)
+		return (-1);
+	return (1);
+}
+
+static	int	putstr(char *s)
+{
+	int	len;
+
+	len = 0;
 	if (!s)
-		return ;
+		s = "(null)";
 	while (*s)
 	{
-		write(fd, s, 1);
+		if(write(1, s, 1) != 1)
+			return (-1);
 		s++;
-	}
-}
-static	size_t	get_lenth(long n)
-{
-	size_t	len;
-
-	if (n == 0)
-		return (1);
-	len = 0;
-	while (n > 0)
-	{
-		n /= 10;
 		len++;
 	}
 	return (len);
 }
 
-static	char	*convert(char *str, unsigned int n, size_t i, size_t flag)
+static	int	print_pointer(void *p)
 {
-	str[i] = '\0';
-	while (i--)
+	int		len;
+	int		i;
+	char	*base = "0123456789abcdef";
+	char	buffer[16];
+	unsigned long	ptr;
+
+	if (!p)
+		return(write(1, "(nil)", 5));
+
+	ptr = (unsigned long)p;
+	if (write(1, "0x", 2) != 2)
+		return (-1);
+	len = 0;
+	while (ptr)
 	{
-		char *base = "123456789ABCDEF";
-		str[i] = n % 16 + '0';
-		n = n / 10;
+		buffer[len++] =  base[ptr % 16];
+		ptr /= 16;
 	}
-	
-	str[0] = '-';
-	return (str);
+	i = len - 1;
+	while (i >= 0)
+		{
+			if (write(1, &buffer[i--], 1) != 1)
+				return (-1);
+		}
+	return (len + 2);
 }
