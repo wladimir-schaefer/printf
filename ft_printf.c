@@ -18,58 +18,44 @@ static	int	putchar(int i);
 static	int	print_pointer(void *p);
 static	int itoa(int i);
 static	int	utoa(unsigned u);
+static	int	print_hex(unsigned u, int uppercase);
 
 
 int	ft_printf(const char *s, ...)
 {
-	va_list	args;
-	int		count;
-	int		i;
-	char	*str;
-	void	*p;
-	unsigned u;
+	va_list		args;
+	int			count;
 
 	count = 0;
-	va_start(args, s);
-	
+	va_start(args, s);	
 	while (*s)
 	{
 		if (*s == '%')
 		{
 			s++;
 			if (*s == 'c')
-			{
-				i = va_arg(args, int);
-				putchar(i);
-			}
+				count += putchar(va_arg(args, int));
 			if (*s == 's')
-			{
-				str = va_arg(args, char*);
-				putstr(str);
-			}
+				count += putstr(va_arg(args, char*));
 			if (*s == 'p')
-			{
-				p = va_arg(args, void *);
-				print_pointer(p);
-			}
+				count += print_pointer(va_arg(args, void *));
 			if (*s == 'd' || *s == 'i')
-			{
-				i = va_arg(args, int);
-				itoa(i);
-			}
+				count += itoa(va_arg(args, int));
 			if (*s == 'u')
-			{
-				u = va_arg(args, unsigned);
-				utoa(u);
-			}
+				count += utoa(va_arg(args, unsigned));
+			if (*s == 'x')
+				count += print_hex(va_arg(args, unsigned), 0);
+			if (*s == 'X')
+				count += print_hex(va_arg(args, unsigned), 1);
+			if (*s == '%')
+				count += putchar('%');
 		}
 		else
 		{
-			write(1, s, 1);			
+			count += write(1, s, 1);			
 		}
 		s++;
 	}
-
 	va_end(args);
 	return(count);
 }
@@ -77,10 +63,12 @@ int	ft_printf(const char *s, ...)
 #include <stdio.h>
 int	main()
 {
+//	char c = 'C';
 //	char *str = "abcdef";
-	unsigned i = 4294967295;
+//	int i = -123;
+	unsigned u = 305441741; //prints: 1234abcd
 
-	printf("%d\n",ft_printf("www %u mmm\n", i));
+	printf("%d\n",ft_printf("www %X mmm %%%%\n", u));
 //	ft_printf("www %p mmm\n", i);
 //	printf("%x\n", 123);
 }
@@ -240,4 +228,34 @@ static	char	*convert_unsigned(char *str, unsigned n, size_t len)
 		n /= 10;
 	}
 	return (str);
+}
+/////////////////////////////
+
+static	int	print_hex(unsigned u, int uppercase)
+{
+	int		i;
+	int		len;
+	char	*base;
+	char	buffer[8];
+
+	if (u == 0)
+		return (write(1, "0", 1));
+	if (uppercase == 0)
+		base = "0123456789abcdef";
+	else
+		base = "0123456789ABCDEF";
+
+	i = 0;
+	while (u)
+	{
+		buffer[i++] =  base[u % 16];
+		u /= 16;
+	}
+	len = i;
+	while (i--)
+		{
+			if (write(1, &buffer[i], 1) != 1)
+				return (-1);
+		}
+	return (len);
 }
