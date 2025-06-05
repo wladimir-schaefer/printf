@@ -16,6 +16,7 @@
 static	int	putstr(char *s);
 static	int	putchar(int i);
 static	int	print_pointer(void *p);
+static	int print_decimal(int i);
 
 int	ft_printf(const char *s, ...)
 {
@@ -125,4 +126,9 @@ static	int	print_pointer(void *p)
 				return (-1);
 		}
 	return (len + 2);
+}
+
+static	int print_decimal(int i)
+{
+
 }
